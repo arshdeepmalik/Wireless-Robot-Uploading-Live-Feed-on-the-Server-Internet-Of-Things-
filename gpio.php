@@ -1,69 +1,77 @@
-<html>
-	<head>
-	<meta name="viewport" content="width=device-width" />
-	<title>Robot Control</title>
-	</head>
-	<body>
-	<CENTER><H2>Live Video</H2></CENTER>
-	<?php
-	echo "<CENTER><img src= \"http://";
-	echo $_SERVER['SERVER_ADDR'];
-	echo ":8081/?action=stream\"/>";
-	//This is what I was trying to implement
-	//<CENTER><img src= "http://192.168.0.107:8081/?action=stream"/></CENTER>
-	?>
+from flask import Flask
+from flask import render_template, request
+import RPi.GPIO as GPIO
+import time
 
-        <CENTER><H2>Robot Control</H2></CENTER>
-        <form method="get" action="gpio.php">
-		<CENTER>
-		<HR>
-		<input type="submit" value="Forward" name="fwd" style="height:50px; width:100px">
-		<BR><BR>
-                <input type="submit" value="Left" name="left" style="height:50px; width:100px">
-		&nbsp;
-                <input type="submit" value="Stop" name="stop" style="height:50px; width:100px">
-		&nbsp;
-                <input type="submit" value="Right" name="right" style="height:50px; width:100px">
-		<BR><BR>
-                <input type="submit" value="Backward" name="bwd" style="height:50px; width:100px">
-		</CENTER>
-		<HR>
-	</form>
-	<?php
-	shell_exec("gpio mode 0 out");
-	shell_exec("gpio mode 1 out");
-	shell_exec("gpio mode 2 out");
-	shell_exec("gpio mode 3 out");
-	if(isset($_GET['fwd'])){
-		shell_exec("gpio write 0 1");
-		shell_exec("gpio write 1 0");
-		shell_exec("gpio write 2 1");
-		shell_exec("gpio write 3 0");
-        }
-        else if(isset($_GET['left'])){
-		shell_exec("gpio write 0 0");
-		shell_exec("gpio write 1 1");
-		shell_exec("gpio write 2 1");
-		shell_exec("gpio write 3 0");
-        }
-        else if(isset($_GET['right'])){
-		shell_exec("gpio write 0 1");
-		shell_exec("gpio write 1 0");
-		shell_exec("gpio write 2 0");
-		shell_exec("gpio write 3 1");
-        }
-        else if(isset($_GET['stop'])){
-		shell_exec("gpio write 0 0");
-		shell_exec("gpio write 1 0");
-		shell_exec("gpio write 2 0");
-		shell_exec("gpio write 3 0");
-        }
-        else if(isset($_GET['bwd'])){
-		shell_exec("gpio write 0 0");
-		shell_exec("gpio write 1 1");
-		shell_exec("gpio write 2 0");
-		shell_exec("gpio write 3 1");
-        }
-       	?>
-        </body>
-</html>
+app = Flask(__name__)
+
+m11=18
+m12=23
+m21=24
+m22=25
+
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(m11, GPIO.OUT)
+GPIO.setup(m12, GPIO.OUT)
+GPIO.setup(m21, GPIO.OUT)
+GPIO.setup(m22, GPIO.OUT)
+GPIO.output(m11 , 0)
+GPIO.output(m12 , 0)
+GPIO.output(m21, 0)
+GPIO.output(m22, 0)
+print "DOne"
+
+a=1
+@app.route("/")
+def index():
+    return render_template('robot.html')
+
+@app.route('/left_side')
+def left_side():
+    data1="LEFT"
+    GPIO.output(m11 , 0)
+    GPIO.output(m12 , 0)
+    GPIO.output(m21 , 1)
+    GPIO.output(m22 , 0)
+    return 'true'
+
+@app.route('/right_side')
+def right_side():
+   data1="RIGHT"
+   GPIO.output(m11 , 1)
+   GPIO.output(m12 , 0)
+   GPIO.output(m21 , 0)
+   GPIO.output(m22 , 0)
+   return 'true'
+
+@app.route('/up_side')
+def up_side():
+   data1="FORWARD"
+   GPIO.output(m11 , 1)
+   GPIO.output(m12 , 0)
+   GPIO.output(m21 , 1)
+   GPIO.output(m22 , 0)
+   return 'true'
+
+@app.route('/down_side')
+def down_side():
+   data1="BACK"
+   GPIO.output(m11 , 0)
+   GPIO.output(m12 , 1)
+   GPIO.output(m21 , 0)
+   GPIO.output(m22 , 1)
+   return 'true'
+
+@app.route('/stop')
+def stop():
+   data1="STOP"
+   GPIO.output(m11 , 0)
+   GPIO.output(m12 , 0)
+   GPIO.output(m21 , 0)
+   GPIO.output(m22 , 0)
+   return  'true'
+
+if __name__ == "__main__":
+ print "Start"
+ app.run(host='0.0.0.0',port=5010)
